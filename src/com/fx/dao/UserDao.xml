@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fx.dao.UserDao">
+
+	<!-- 添加 -->
+	<insert id="insert" parameterType="com.fx.entity.User">
+		insert
+		tbs_user(uuid,payment_type,taobao_id,order_num,price,user_id,create_time,user_ip,status)
+		values
+		(
+		#{uuid},#{payment_type},#{taobao_id},#{order_num},#{price},#{user_id},#{create_time},#{user_ip},#{status}
+		)
+	</insert>
+
+	<!-- 按uuid删除 -->
+	<delete id="delete" parameterType="java.util.Map">
+		update tbs_user set status=#{status} where uuid=#{uuid}
+	</delete>
+	
+	<!-- 按主键更新 -->
+	<update id="update" parameterType="java.util.Map">
+		update tbs_user set
+		payment_type=#{payment_type},taobao_id=#{taobao_id},order_num=#{order_num},price=#{price},
+		user_id=#{user_id},modify_time=#{modify_time},user_ip=#{user_ip} where uuid=#{uuid}
+	</update>
+	
+	<!-- 查询所有信息 -->
+	<select id="list" resultType="com.fx.entity.User">
+    select * from tbs_user where status=1 order by create_time desc
+    </select>
+	
+	<!-- 分页查询 -->
+	<select id="listByPage" resultType="com.fx.entity.User">
+    select * from tbs_user where status=1 order by create_time desc limit #{currentNum},#{pageSize}
+    </select>
+	
+	<!-- 查询记录总数 -->
+	<select id="count" resultType="int">
+    	select count(*) from tbs_user where status=1
+    		<!-- 按uuid-->
+		<if test="uuid!=null and uuid!=''">
+			and uuid=#{uuid}
+		</if>
+		<!-- 按日期查询订单 -->
+		<if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+			and create_time between #{start_time} and #{end_time}
+		</if>
+		<!-- 按淘宝id查询订单 -->
+		<if test="taobao_id!=null and taobao_id!=''">
+			and taobao_id like CONCAT('%',#{taobao_id},'%') 
+		</if>
+		<!-- 按操作人查询订单 -->
+		<if test="user_id!=null and user_id!=''">
+			and user_id = #{user_id}
+		</if>
+		<!-- 按订单编号查询订单 -->
+		<if test="order_num!=null and order_num!=''">
+			and order_num = #{order_num}
+		</if>
+    </select>
+    
+ 	<!-- 验证订单号是否存在 -->
+    <select id="listByOrderNum" resultType="com.fx.entity.User">
+    	select * from tbs_user where status=1 and order_num = #{order_num}
+    </select>
+    
+    <!-- 按条件查询 -->
+    <select id="listBy" resultType="com.fx.entity.User" flushCache="true" useCache="false">
+		select * from tbs_user where status=1
+		<!-- 按uuid-->
+		<if test="uuid!=null and uuid!=''">
+			and uuid=#{uuid}
+		</if>
+		<!-- 按日期查询订单 -->
+		<if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+			and create_time between #{start_time} and #{end_time}
+		</if>
+		<!-- 按淘宝id查询订单 -->
+		<if test="taobao_id!=null and taobao_id!=''">
+			and taobao_id like CONCAT('%',#{taobao_id},'%') 
+		</if>
+		<!-- 按操作人查询订单 -->
+		<if test="user_id!=null and user_id!=''">
+			and user_id = #{user_id}
+		</if>
+		<!-- 按订单编号查询订单 -->
+		<if test="order_num!=null and order_num!=''">
+			and order_num = #{order_num}
+		</if>	
+		order by create_time desc limit #{currentNum},#{pageSize}
+	</select>
+	
+	<!-- 按条件查询总额，总数 -->
+    <select id="listBySum" resultType="String">
+		select sum(price) from tbs_user where status=1
+		<!-- 按uuid-->
+		<if test="uuid!=null and uuid!=''">
+			and uuid=#{uuid}
+		</if>
+		<!-- 按日期查询订单 -->
+		<if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+			and create_time between #{start_time} and #{end_time}
+		</if>
+		<!-- 按淘宝id查询订单 -->
+		<if test="taobao_id!=null and taobao_id!=''">
+			and taobao_id like CONCAT('%',#{taobao_id},'%') 
+		</if>
+		<!-- 按操作人查询订单 -->
+		<if test="user_id!=null and user_id!=''">
+			and user_id = #{user_id}
+		</if>
+		<!-- 按订单编号查询订单 -->
+		<if test="order_num!=null and order_num!=''">
+			and order_num = #{order_num}
+		</if>	
+	</select>
+	
+	<!-- 饼状图 -->
+	<select id="bingChart" resultType="com.fx.entity.Chart">
+		select sum(price) as price_sum ,payment_type as type from tbs_user where status=1
+		<if test="start_time!=null and start_time!='' and end_time!=null and end_time!=''">
+			and create_time between #{start_time} and #{end_time}
+		</if>
+		group by payment_type
+	</select>
+	
+	<!-- 柱状图 -->
+	<select id="zhuChart" resultType="com.fx.entity.Chart">
+		select
+
+		DATE_FORMAT(create_time,'%m') as month, sum(price) as price_sum ,payment_type as type 
+		
+		from tbs_user where status=1 
+		<if test="start_year!=null and start_year!='' and end_year!=null and end_year!=''">
+			and year(create_time) between #{start_year} and #{end_year}
+		</if>
+				
+		group by DATE_FORMAT(create_time,'%m'),type
+		
+		order by create_time;
+	</select>
+	
+</mapper>
